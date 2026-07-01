@@ -1,0 +1,28 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-signed-images
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: verify-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      verifyImages:
+        - imageReferences:
+            - "docker.io/eliabkuta/signed-and-sealed*"
+            - "eliabkuta/signed-and-sealed*"
+          attestors:
+            - entries:
+                - keyless:
+                    subject: "https://github.com/Eliab-K/signed-and-sealed/.github/workflows/build-sign.yml@refs/heads/main"
+                    issuer: "https://token.actions.githubusercontent.com"
+                    rekor:
+                      url: https://rekor.sigstore.dev
+          mutateDigest: false
+          verifyDigest: true
+          required: true
